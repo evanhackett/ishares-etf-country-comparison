@@ -20,7 +20,7 @@ def load_etfs() -> dict[str, str]:
 
 ETFS = load_etfs()
 
-CACHE_FILE = Path(__file__).parent / "etf_cache.json"
+CACHE_FILE = Path(__file__).parent / "cache" / "etf_cache.json"
 CACHE_TTL = 24 * 60 * 60  # seconds
 
 HEADERS = {
@@ -51,6 +51,7 @@ def load_cache() -> dict:
 
 
 def save_cache(cache: dict) -> None:
+    CACHE_FILE.parent.mkdir(exist_ok=True)
     CACHE_FILE.write_text(json.dumps(cache, indent=2))
 
 
@@ -131,7 +132,8 @@ if __name__ == "__main__":
     results = scrape(ETFS)
     results.sort(key=pe_sort_key)
 
-    csv_path = Path(__file__).parent / "results.csv"
+    csv_path = Path(__file__).parent / "results" / "scrape_ishares_results.csv"
+    csv_path.parent.mkdir(exist_ok=True)
     with csv_path.open("w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(

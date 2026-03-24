@@ -1,7 +1,5 @@
-etf_cache.json
-ra_shillerpe_cache.json
-sma200_cache.json
-results.csv
+cache/
+results/
 __pycache__/
 *.pyc
 .claude/

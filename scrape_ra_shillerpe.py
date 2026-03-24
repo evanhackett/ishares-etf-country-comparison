@@ -10,7 +10,7 @@ from pathlib import Path
 BASE_URL = "https://interactive.researchaffiliates.com"
 INDEX_URL = f"{BASE_URL}/asset-allocation"
 
-CACHE_FILE = Path(__file__).parent / "ra_shillerpe_cache.json"
+CACHE_FILE = Path(__file__).parent / "cache" / "ra_shillerpe_cache.json"
 CACHE_TTL = 24 * 60 * 60  # seconds
 
 HEADERS = {
@@ -43,6 +43,7 @@ def get_shiller_pe() -> list:
     url = f"{BASE_URL}{data_path}/boxplot/boxplot_shillerpe.json"
     print(f"Fetching {url}")
     data = json.loads(fetch(url))
+    CACHE_FILE.parent.mkdir(exist_ok=True)
     CACHE_FILE.write_text(json.dumps({"timestamp": time.time(), "data": data}, indent=2))
     return data
 

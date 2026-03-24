@@ -10,7 +10,7 @@ import tomllib
 import yfinance as yf
 
 CONFIG_FILE = Path(__file__).parent / "etfs.toml"
-CACHE_FILE = Path(__file__).parent / "sma200_cache.json"
+CACHE_FILE = Path(__file__).parent / "cache" / "sma200_cache.json"
 CACHE_TTL = 60 * 60  # seconds
 PRICE_HISTORY_DAYS = "300d"
 
@@ -27,6 +27,7 @@ def load_cache() -> dict:
 
 
 def save_cache(cache: dict) -> None:
+    CACHE_FILE.parent.mkdir(exist_ok=True)
     CACHE_FILE.write_text(json.dumps(cache, indent=2))
 
 
