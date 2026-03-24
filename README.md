@@ -2,6 +2,8 @@
 
 Scrapes P/E ratio, P/B ratio, and 12-month trailing yield from iShares ETF pages.
 
+It is surprisingly difficult to find country comparisons of pe ratio, pb ratio, and dividend yield. Many sites have pe comparisons across countries, but to get pb and yield you have to go to specific ETF pages. iShares has ETFs for many countries, making it a useful resource. The script herein scrapes iShares' public ETF pages and outputs the aforementioned data in a table.
+
 ## Usage
 
 ```
