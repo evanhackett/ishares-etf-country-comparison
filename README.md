@@ -16,8 +16,11 @@ Fetched pages are cached in `etf_cache.json` for 24 hours to avoid rate limiting
 
 ## Adding ETFs
 
-Add entries to the `ETFS` dict in `scrape_ishares.py`:
+Add entries to the `ETFS` list in `scrape_ishares.py`. Simply add the url to the desired ETF page:
 
 ```python
-"TICKER": "https://www.ishares.com/us/products/...",
+ETFS = [
+    ...
+    "https://www.ishares.com/us/products/...",
+]
 ```

@@ -9,44 +9,45 @@ import urllib.request
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-ETFS = {
-    "EWJ": "https://www.ishares.com/us/products/239665/ishares-msci-japan-etf",
-    "IVV": "https://www.ishares.com/us/products/239726/ishares-core-sp-500-etf",
-    "EWL": "https://www.ishares.com/us/products/239685/",
-    "ENOR": "https://www.ishares.com/us/products/239673/",
-    "THD": "https://www.ishares.com/us/products/239688/",
-    "TUR": "https://www.ishares.com/us/products/239689/",
-    "EIS": "https://www.ishares.com/us/products/239663/",
-    "MCHI": "https://www.ishares.com/us/products/239619/",
-    "EWH": "https://www.ishares.com/us/products/239657/",
-    "INDA": "https://www.ishares.com/us/products/239659/",
-    "EWQ": "https://www.ishares.com/us/products/239648/",
-    "EWU": "https://www.ishares.com/us/products/239690/",
-    "EWC": "https://www.ishares.com/us/products/239615/",
-    "KSA": "https://www.ishares.com/us/products/271542/",
-    "EWG": "https://www.ishares.com/us/products/239650/",
-    "EWY": "https://www.ishares.com/us/products/239681/",
-    "EWT": "https://www.ishares.com/us/products/239686/",
-    "EWA": "https://www.ishares.com/us/products/239607/",
-    "EWD": "https://www.ishares.com/us/products/239684/",
-    "EWN": "https://www.ishares.com/us/products/239671/",
-    "EZA": "https://www.ishares.com/us/products/239680/",
-    "EWZ": "https://www.ishares.com/us/products/239612/",
-    "EWP": "https://www.ishares.com/us/products/239683/",
-    "EWS": "https://www.ishares.com/us/products/239678/",
-    "EWI": "https://www.ishares.com/us/products/239664/",
-    "EIDO": "https://www.ishares.com/us/products/239661/",
-    "EWM": "https://www.ishares.com/us/products/239669/",
-    "EWW": "https://www.ishares.com/us/products/239670/",
-    "EWK": "https://www.ishares.com/us/products/239610/",
-    "UAE": "https://www.ishares.com/us/products/264275/",
-    "EPHE": "https://www.ishares.com/us/products/239675/",
-    "EPOL": "https://www.ishares.com/us/products/239676/",
-    "ILF": "https://www.ishares.com/us/products/239761/ishares-latin-america-40-etf",
-    "IXUS": "https://www.ishares.com/us/products/244048/",
-    "IDEV": "https://www.ishares.com/us/products/286762/",
-    "IEMG": "https://www.ishares.com/us/products/244050/",
-}
+ETFS = [
+    "https://www.ishares.com/us/products/239665/ishares-msci-japan-etf",
+    "https://www.ishares.com/us/products/239726/ishares-core-sp-500-etf",
+    "https://www.ishares.com/us/products/239685/",
+    "https://www.ishares.com/us/products/239673/",
+    "https://www.ishares.com/us/products/239688/",
+    "https://www.ishares.com/us/products/239689/",
+    "https://www.ishares.com/us/products/239663/",
+    "https://www.ishares.com/us/products/239619/",
+    "https://www.ishares.com/us/products/239657/",
+    "https://www.ishares.com/us/products/239659/",
+    "https://www.ishares.com/us/products/239648/",
+    "https://www.ishares.com/us/products/239690/",
+    "https://www.ishares.com/us/products/239615/",
+    "https://www.ishares.com/us/products/271542/",
+    "https://www.ishares.com/us/products/239650/",
+    "https://www.ishares.com/us/products/239681/",
+    "https://www.ishares.com/us/products/239686/",
+    "https://www.ishares.com/us/products/239607/",
+    "https://www.ishares.com/us/products/239684/",
+    "https://www.ishares.com/us/products/239671/",
+    "https://www.ishares.com/us/products/239680/",
+    "https://www.ishares.com/us/products/239612/",
+    "https://www.ishares.com/us/products/239683/",
+    "https://www.ishares.com/us/products/239678/",
+    "https://www.ishares.com/us/products/239664/",
+    "https://www.ishares.com/us/products/239661/",
+    "https://www.ishares.com/us/products/239669/",
+    "https://www.ishares.com/us/products/239670/",
+    "https://www.ishares.com/us/products/239610/",
+    "https://www.ishares.com/us/products/264275/",
+    "https://www.ishares.com/us/products/239675/",
+    "https://www.ishares.com/us/products/239676/",
+    "https://www.ishares.com/us/products/239761/ishares-latin-america-40-etf",
+    "https://www.ishares.com/us/products/244048/",
+    "https://www.ishares.com/us/products/286762/",
+    "https://www.ishares.com/us/products/244050/",
+    "https://www.ishares.com/us/products/239618/",
+]
 
 CACHE_FILE = Path(__file__).parent / "etf_cache.json"
 CACHE_TTL = 24 * 60 * 60  # seconds
@@ -88,9 +89,14 @@ def fetch_html(url: str) -> str:
         return resp.read().decode("utf-8")
 
 
-def parse_metrics(html: str, ticker: str, url: str) -> ETFMetrics:
+def parse_metrics(html: str, url: str) -> ETFMetrics:
     name_match = re.search(r"<h1[^>]*>(.*?)</h1>", html, re.DOTALL)
     name = re.sub(r"<[^>]+>", "", name_match.group(1)).strip() if name_match else None
+
+    title_match = re.search(r"<title>[^|]+\|\s*([A-Z]+)\s*</title>", html)
+    ticker = (
+        title_match.group(1) if title_match else url.rstrip("/").split("/")[-1].upper()
+    )
 
     values = {}
     for col, field in FIELDS.items():
@@ -105,10 +111,10 @@ def parse_metrics(html: str, ticker: str, url: str) -> ETFMetrics:
     return ETFMetrics(ticker=ticker, url=url, name=name, **values)
 
 
-def scrape(etfs: dict[str, str], delay: float = 1.0) -> list[ETFMetrics]:
+def scrape(urls: list[str], delay: float = 1.0) -> list[ETFMetrics]:
     """
     Args:
-        etfs: dict of {ticker: ishares_url}
+        urls: list of iShares ETF URLs
         delay: seconds to wait between requests
     """
     cache = load_cache()
@@ -116,22 +122,24 @@ def scrape(etfs: dict[str, str], delay: float = 1.0) -> list[ETFMetrics]:
     results = []
     fetched = 0
 
-    for ticker, url in etfs.items():
-        entry = cache.get(ticker)
+    for url in urls:
+        # Check cache by URL
+        entry = next((e for e in cache.values() if e.get("url") == url), None)
         if entry and (now - entry["timestamp"]) < CACHE_TTL:
+            ticker = entry["ticker"]
             print(f"Using cache for {ticker}")
             metrics = ETFMetrics(**{k: v for k, v in entry.items() if k != "timestamp"})
         else:
             if fetched > 0:
                 time.sleep(delay)
-            print(f"Fetching {ticker}...")
+            print(f"Fetching {url}...")
             html = fetch_html(url)
-            metrics = parse_metrics(html, ticker, url)
-            cache[ticker] = {**asdict(metrics), "timestamp": now}
+            metrics = parse_metrics(html, url)
+            cache[metrics.ticker] = {**asdict(metrics), "timestamp": now}
             save_cache(cache)
             fetched += 1
             print(
-                f"  Name: {metrics.name}  P/E: {metrics.pe_ratio}  P/B: {metrics.pb_ratio}  Yield: {metrics.dividend_yield_12m}"
+                f"  {metrics.ticker}: {metrics.name}  P/E: {metrics.pe_ratio}  P/B: {metrics.pb_ratio}  Yield: {metrics.dividend_yield_12m}"
             )
 
         results.append(metrics)
@@ -143,7 +151,7 @@ def display_name(name: str | None) -> str:
         return "N/A"
     for prefix in ("iShares Core MSCI ", "iShares MSCI "):
         if name.startswith(prefix):
-            name = name[len(prefix):]
+            name = name[len(prefix) :]
             break
     return name.removesuffix(" ETF")
 
