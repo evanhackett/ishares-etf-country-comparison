@@ -40,6 +40,13 @@ Joins data from all three sources into a single table sorted by Shiller P/E perc
 .venv/bin/python3 combined.py
 ```
 
+### `value_trend.py`
+Applies a value + trend filter to the combined dataset and prints the passing ETFs sorted by Shiller P/E percentile. An ETF passes if it is above its 200-day SMA (trend) and at or below the 50th historical percentile on Shiller P/E (value). If `results/combined_results.csv` is missing or more than an hour old, `combined.py` is run automatically first.
+
+```
+.venv/bin/python3 value_trend.py
+```
+
 ## Configuration
 
 ### `etfs.toml`
