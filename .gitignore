@@ -1,0 +1,5 @@
+etf_cache.json
+results.csv
+__pycache__/
+*.pyc
+.claude/
