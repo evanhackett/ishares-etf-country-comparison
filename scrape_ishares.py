@@ -5,49 +5,20 @@ import csv
 import json
 import re
 import time
+import tomllib
 import urllib.request
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-ETFS = [
-    "https://www.ishares.com/us/products/239665/ishares-msci-japan-etf",
-    "https://www.ishares.com/us/products/239726/ishares-core-sp-500-etf",
-    "https://www.ishares.com/us/products/239685/",
-    "https://www.ishares.com/us/products/239673/",
-    "https://www.ishares.com/us/products/239688/",
-    "https://www.ishares.com/us/products/239689/",
-    "https://www.ishares.com/us/products/239663/",
-    "https://www.ishares.com/us/products/239619/",
-    "https://www.ishares.com/us/products/239657/",
-    "https://www.ishares.com/us/products/239659/",
-    "https://www.ishares.com/us/products/239648/",
-    "https://www.ishares.com/us/products/239690/",
-    "https://www.ishares.com/us/products/239615/",
-    "https://www.ishares.com/us/products/271542/",
-    "https://www.ishares.com/us/products/239650/",
-    "https://www.ishares.com/us/products/239681/",
-    "https://www.ishares.com/us/products/239686/",
-    "https://www.ishares.com/us/products/239607/",
-    "https://www.ishares.com/us/products/239684/",
-    "https://www.ishares.com/us/products/239671/",
-    "https://www.ishares.com/us/products/239680/",
-    "https://www.ishares.com/us/products/239612/",
-    "https://www.ishares.com/us/products/239683/",
-    "https://www.ishares.com/us/products/239678/",
-    "https://www.ishares.com/us/products/239664/",
-    "https://www.ishares.com/us/products/239661/",
-    "https://www.ishares.com/us/products/239669/",
-    "https://www.ishares.com/us/products/239670/",
-    "https://www.ishares.com/us/products/239610/",
-    "https://www.ishares.com/us/products/264275/",
-    "https://www.ishares.com/us/products/239675/",
-    "https://www.ishares.com/us/products/239676/",
-    "https://www.ishares.com/us/products/239761/ishares-latin-america-40-etf",
-    "https://www.ishares.com/us/products/244048/",
-    "https://www.ishares.com/us/products/286762/",
-    "https://www.ishares.com/us/products/244050/",
-    "https://www.ishares.com/us/products/239618/",
-]
+CONFIG_FILE = Path(__file__).parent / "etfs.toml"
+
+
+def load_etfs() -> dict[str, str]:
+    with CONFIG_FILE.open("rb") as f:
+        return tomllib.load(f)["etfs"]
+
+
+ETFS = load_etfs()
 
 CACHE_FILE = Path(__file__).parent / "etf_cache.json"
 CACHE_TTL = 24 * 60 * 60  # seconds
@@ -89,14 +60,9 @@ def fetch_html(url: str) -> str:
         return resp.read().decode("utf-8")
 
 
-def parse_metrics(html: str, url: str) -> ETFMetrics:
+def parse_metrics(html: str, ticker: str, url: str) -> ETFMetrics:
     name_match = re.search(r"<h1[^>]*>(.*?)</h1>", html, re.DOTALL)
     name = re.sub(r"<[^>]+>", "", name_match.group(1)).strip() if name_match else None
-
-    title_match = re.search(r"<title>[^|]+\|\s*([A-Z]+)\s*</title>", html)
-    ticker = (
-        title_match.group(1) if title_match else url.rstrip("/").split("/")[-1].upper()
-    )
 
     values = {}
     for col, field in FIELDS.items():
@@ -111,10 +77,10 @@ def parse_metrics(html: str, url: str) -> ETFMetrics:
     return ETFMetrics(ticker=ticker, url=url, name=name, **values)
 
 
-def scrape(urls: list[str], delay: float = 1.0) -> list[ETFMetrics]:
+def scrape(etfs: dict[str, str], delay: float = 1.0) -> list[ETFMetrics]:
     """
     Args:
-        urls: list of iShares ETF URLs
+        etfs: dict of {ticker: ishares_url}
         delay: seconds to wait between requests
     """
     cache = load_cache()
@@ -122,24 +88,22 @@ def scrape(urls: list[str], delay: float = 1.0) -> list[ETFMetrics]:
     results = []
     fetched = 0
 
-    for url in urls:
-        # Check cache by URL
-        entry = next((e for e in cache.values() if e.get("url") == url), None)
+    for ticker, url in etfs.items():
+        entry = cache.get(ticker)
         if entry and (now - entry["timestamp"]) < CACHE_TTL:
-            ticker = entry["ticker"]
             print(f"Using cache for {ticker}")
             metrics = ETFMetrics(**{k: v for k, v in entry.items() if k != "timestamp"})
         else:
             if fetched > 0:
                 time.sleep(delay)
-            print(f"Fetching {url}...")
+            print(f"Fetching {ticker}...")
             html = fetch_html(url)
-            metrics = parse_metrics(html, url)
-            cache[metrics.ticker] = {**asdict(metrics), "timestamp": now}
+            metrics = parse_metrics(html, ticker, url)
+            cache[ticker] = {**asdict(metrics), "timestamp": now}
             save_cache(cache)
             fetched += 1
             print(
-                f"  {metrics.ticker}: {metrics.name}  P/E: {metrics.pe_ratio}  P/B: {metrics.pb_ratio}  Yield: {metrics.dividend_yield_12m}"
+                f"  {metrics.name}  P/E: {metrics.pe_ratio}  P/B: {metrics.pb_ratio}  Yield: {metrics.dividend_yield_12m}"
             )
 
         results.append(metrics)
